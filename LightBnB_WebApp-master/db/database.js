@@ -45,7 +45,6 @@ const getUserWithId = function (id) {
       if (!result.rows[0]) {
         return null;
       }
-      console.log(result.rows[0]);
       return result.rows[0];
     })
     .catch((err) => {
@@ -77,7 +76,25 @@ const addUser = function (user) {
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function (guest_id, limit = 10) {
-  return getAllProperties(null, 2);
+  return pool
+    .query(`SELECT reservations.id as id, properties.*, reservations.start_date as start_date, avg(property_reviews.rating) as average_rating
+    FROM properties
+    JOIN reservations ON properties.id = reservations.property_id
+    JOIN property_reviews ON properties.id = property_reviews.property_id
+    WHERE reservations.guest_id = $1
+    GROUP BY reservations.id, properties.*, properties.id
+    ORDER BY start_date
+    LIMIT $2;`, [guest_id, limit])
+    .then((result) => {
+      // if (!result.rows[0]) {
+      //   return null;
+      // }
+      console.log(result.rows);
+      return result.rows;
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 };
 
 /// Properties
